@@ -2,6 +2,7 @@ package com.example.todo.service.impl;
 
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.exception.InvalidStatusTransitionException;
 import com.example.todo.exception.ResourceNotFoundException;
 import com.example.todo.exception.TaskAlreadyCompletedException;
 import com.example.todo.mapper.TaskMapper;
@@ -20,8 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -176,6 +176,18 @@ class TaskServiceImplTest {
 
         assertThatThrownBy(() -> taskService.update(taskId, requestDto))
                 .isInstanceOf(TaskAlreadyCompletedException.class);
+
+        verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    void update_shouldThrowException_whenStatusTransitionIsInvalid() {
+        task.setStatus(TaskStatus.IN_PROGRESS);
+        requestDto.setStatus(TaskStatus.NEW);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+
+        assertThatThrownBy(() -> taskService.update(taskId, requestDto))
+                .isInstanceOf(InvalidStatusTransitionException.class);
 
         verify(taskRepository, never()).save(any());
     }
