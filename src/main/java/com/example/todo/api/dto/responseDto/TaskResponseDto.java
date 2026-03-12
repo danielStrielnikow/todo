@@ -1,4 +1,4 @@
-package com.example.todo.dto.responseDto;
+package com.example.todo.api.dto.responseDto;
 
 import com.example.todo.model.enums.TaskStatus;
 

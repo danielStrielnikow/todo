@@ -1,7 +1,7 @@
 package com.example.todo.service;
 
-import com.example.todo.dto.requestDto.TaskRequestDto;
-import com.example.todo.dto.responseDto.TaskResponseDto;
+import com.example.todo.api.dto.requestDto.TaskRequestDto;
+import com.example.todo.api.dto.responseDto.TaskResponseDto;
 
 import java.util.List;
 import java.util.UUID;

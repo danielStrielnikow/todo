@@ -1,4 +1,4 @@
-package com.example.todo.dto.requestDto;
+package com.example.todo.api.dto.requestDto;
 
 import com.example.todo.model.enums.TaskStatus;
 import jakarta.validation.constraints.NotBlank;

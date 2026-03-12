@@ -1,16 +1,17 @@
 package com.example.todo.controller;
 
-import com.example.todo.dto.requestDto.TaskRequestDto;
-import com.example.todo.dto.responseDto.TaskResponseDto;
+import com.example.todo.api.controller.TaskController;
+import com.example.todo.api.dto.requestDto.TaskRequestDto;
+import com.example.todo.api.dto.responseDto.TaskResponseDto;
 import com.example.todo.model.enums.TaskStatus;
 import com.example.todo.service.TaskService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.engine.TestExecutionResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TaskController.class)
-public class TaskController {
+public class TaskControllerTest {
     
     @Autowired
     private MockMvc mockMvc;
@@ -87,7 +88,7 @@ public class TaskController {
     void PUT_updateTask_shouldReturnUpdated() throws Exception {
         when(taskService.update(eq(taskId), any())).thenReturn(responseDto);
         
-        mockMvc.perform(put("api/tasks/{id}", taskId)
+        mockMvc.perform(put("/api/tasks/{id}", taskId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
