@@ -102,4 +102,14 @@ public class TaskController {
         mockMvc.perform(delete("/api/tasks/{id}", taskId))
                 .andExpect(status().isNoContent());
     }
+    
+    @Test
+    void POST_createTask_shouldReturn400_whenTitleIsBland() throws Exception {
+        requestDto.setTitle("");
+        
+        mockMvc.perform(post("/api/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isBadRequest());
+    }
 }
