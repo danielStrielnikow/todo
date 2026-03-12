@@ -3,6 +3,7 @@ package com.example.todo.service.impl;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
 import com.example.todo.exception.ResourceNotFoundException;
+import com.example.todo.exception.TaskAlreadyCompletedException;
 import com.example.todo.mapper.TaskMapper;
 import com.example.todo.model.Task;
 import com.example.todo.model.enums.TaskStatus;
@@ -166,5 +167,16 @@ class TaskServiceImplTest {
                 .hasMessageContaining(taskId.toString());
 
         verify(taskRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void update_shouldThrowException_whenTaskIsAlreadyDone() {
+        task.setStatus(TaskStatus.DONE);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+
+        assertThatThrownBy(() -> taskService.update(taskId, requestDto))
+                .isInstanceOf(TaskAlreadyCompletedException.class);
+
+        verify(taskRepository, never()).save(any());
     }
 }
