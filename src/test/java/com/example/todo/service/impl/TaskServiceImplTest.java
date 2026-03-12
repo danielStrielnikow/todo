@@ -127,6 +127,9 @@ class TaskServiceImplTest {
 
     @Test
     void update_shouldReturnUpdatedTask_whenExists() {
+        task.setStatus(TaskStatus.NEW);
+        requestDto.setStatus(TaskStatus.IN_PROGRESS); 
+
         when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
         when(taskRepository.save(task)).thenReturn(task);
         when(taskMapper.toResponse(task)).thenReturn(responseDto);
