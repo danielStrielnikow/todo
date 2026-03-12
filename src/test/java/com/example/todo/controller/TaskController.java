@@ -15,11 +15,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,5 +72,34 @@ public class TaskController {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Test task"))
                 .andExpect(jsonPath("$.status").value("NEW"));
+    }
+    
+    @Test
+    void GET_getAllTasks_shouldReturnAllTasks() throws Exception {
+        when(taskService.findAll()).thenReturn(Arrays.asList(responseDto));
+
+        mockMvc.perform(get("/api/tasks"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+    
+    @Test
+    void PUT_updateTask_shouldReturnUpdated() throws Exception {
+        when(taskService.update(eq(taskId), any())).thenReturn(responseDto);
+        
+        mockMvc.perform(put("api/tasks/{id}", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Test task"));
+    }
+    
+    
+    @Test
+    void DELETE_task_shouldReturnDeleted() throws Exception {
+        doNothing().when(taskService).delete(eq(taskId));
+        
+        mockMvc.perform(delete("/api/tasks/{id}", taskId))
+                .andExpect(status().isNoContent());
     }
 }
