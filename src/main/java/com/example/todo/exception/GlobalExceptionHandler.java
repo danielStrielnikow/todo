@@ -1,6 +1,7 @@
 package com.example.todo.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -14,11 +15,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(
             ResourceNotFoundException ex, HttpServletRequest request) {
+        log.warn("Resource not found: {} | path: {}", ex.getMessage(), request.getRequestURI());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(404, ex.getMessage(), request.getRequestURI()));
@@ -27,6 +30,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TaskAlreadyCompletedException.class)
     public ResponseEntity<ErrorResponse> handleAlreadyCompleted(
             TaskAlreadyCompletedException ex, HttpServletRequest request) {
+        log.warn("Task already completed: {} | path: {}", ex.getMessage(), request.getRequestURI());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(409, ex.getMessage(), request.getRequestURI()));
@@ -35,6 +39,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidStatusTransitionException.class)
     public ResponseEntity<ErrorResponse> handleInvalidTransition(
             InvalidStatusTransitionException ex, HttpServletRequest request) {
+        log.warn("Invalid status transition: {} | path: {}", ex.getMessage(), request.getRequestURI());
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new ErrorResponse(422, ex.getMessage(), request.getRequestURI()));
@@ -72,7 +77,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(
+            Exception ex, 
             HttpServletRequest request) {
+        log.error("Unexpected error: {} | path: {}", ex.getMessage(), request.getRequestURI(), ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(500, "Unexpected error occurred", request.getRequestURI()));
