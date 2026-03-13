@@ -269,4 +269,16 @@ public class TaskControllerTest {
     }
     
     
+    @Test
+    void GET_stats_shouldReturn200_withStatistics() throws Exception {
+        TaskStatsDto stats = new TaskStatsDto(10, 3, 5, 2);
+        when(taskService.getStats).thenReturn(stats);
+        
+        mockMvc.perform(get("/api/tasks/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(10))
+                .andExpect(jsonPath("$.newCount").value(3))
+                .andExpect(jsonPath("$.inProgressCount").value(5))
+                .andExpect(jsonPath("$.doneCount").value(2));
+    } 
 }
