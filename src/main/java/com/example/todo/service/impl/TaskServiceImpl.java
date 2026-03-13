@@ -65,19 +65,15 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public TaskResponseDto findById(UUID id) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
-        return taskMapper.toResponse(task);
+        return taskMapper.toResponse(findTaskById(id));
     }
 
     @Override
     @Transactional
     public TaskResponseDto update(UUID id, TaskRequestDto dto) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+        Task task = findTaskById(id);
 
-
-        if (task.getStatus() == TaskStatus.DONE) throw new TaskAlreadyCompletedException(id);
+        validateNotCompleted(task);
 
         taskMapper.updateEntity(dto, task);
         Task saved = taskRepository.save(task);
@@ -86,17 +82,28 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional
     public TaskResponseDto updateStatus(UUID id, TaskStatus newStatus) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+        Task task = findTaskById(id);
 
-        if (task.getStatus() == TaskStatus.DONE) throw new TaskAlreadyCompletedException(id);
+        validateNotCompleted(task);
 
         validateStatusTransition(task.getStatus(), newStatus);
         task.setStatus(newStatus);
         Task savedStatus = taskRepository.save(task);
         log.info("Task updated status: {}", id);
         return taskMapper.toResponse(savedStatus);
+    }
+
+    private Task findTaskById(UUID id) {
+        return taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+    }
+
+    private void validateNotCompleted(Task task) {
+        if (task.getStatus() == TaskStatus.DONE) {
+            throw new TaskAlreadyCompletedException(task.getId());
+        }
     }
 
     private void validateStatusTransition(TaskStatus from, TaskStatus to) {
@@ -114,10 +121,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public void delete(UUID id) {
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+        Task task = findTaskById(id);
 
-        if (task.getStatus() == TaskStatus.DONE) throw new TaskAlreadyCompletedException(id);
+        validateNotCompleted(task);
 
         taskRepository.deleteById(id);
         log.info("Task deleted: {}", id);
