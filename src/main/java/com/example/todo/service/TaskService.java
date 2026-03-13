@@ -3,6 +3,7 @@ package com.example.todo.service;
 import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.model.enums.TaskStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,6 +18,8 @@ public interface TaskService {
     TaskResponseDto findById(UUID id);
 
     TaskResponseDto update(UUID id, TaskRequestDto dto);
+    
+    TaskResponseDto updateStatus(UUID id, TaskStatus status);
 
     void delete(UUID id);
 }

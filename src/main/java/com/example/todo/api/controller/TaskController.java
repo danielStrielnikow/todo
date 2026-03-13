@@ -1,8 +1,10 @@
 package com.example.todo.api.controller;
 
+import com.example.todo.api.dto.requestDto.StatusUpdateRequest;
 import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.model.enums.TaskStatus;
 import com.example.todo.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,12 @@ public class TaskController {
     public ResponseEntity<TaskResponseDto> update(@PathVariable UUID id,
                                                   @Valid @RequestBody TaskRequestDto dto) {
         return ResponseEntity.ok(taskService.update(id, dto));
+    }
+    
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TaskResponseDto> updateStatus(@PathVariable UUID id,
+                                                        @Valid @RequestBody StatusUpdateRequest request) {
+        return ResponseEntity.ok(taskService.updateStatus(id, request.getStatus()));
     }
 
     @DeleteMapping("/{id}")

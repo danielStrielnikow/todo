@@ -74,6 +74,20 @@ public class TaskServiceImpl implements TaskService {
         return taskMapper.toResponse(saved);
     }
 
+    @Override
+    public TaskResponseDto updateStatus(UUID id, TaskStatus newStatus) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+
+        if (task.getStatus() == TaskStatus.DONE) throw new TaskAlreadyCompletedException(id);
+        
+        validateStatusTransition(task.getStatus(), newStatus);
+        task.setStatus(newStatus);
+        Task savedStatus = taskRepository.save(task);
+        log.info("Task updated status: {}", id);
+        return taskMapper.toResponse(savedStatus);
+    }
+
     private void validateStatusTransition(TaskStatus from, TaskStatus to) {
         boolean valid = switch (from) {
             case NEW -> to == TaskStatus.IN_PROGRESS;
