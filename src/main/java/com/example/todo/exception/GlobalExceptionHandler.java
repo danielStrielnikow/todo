@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -73,6 +74,15 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(400, "Invalid value for parameter '" + ex.getName() + "': " +
                         ex.getValue(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(
+            NoResourceFoundException ex, HttpServletRequest request) {
+        log.warn("No resource found: {} | path: {}", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(404, "Path not found: " + request.getRequestURI(), request.getRequestURI()));
     }
 
     @ExceptionHandler(Exception.class)
