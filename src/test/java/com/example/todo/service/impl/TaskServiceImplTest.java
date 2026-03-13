@@ -232,4 +232,17 @@ class TaskServiceImplTest {
         assertThat(result.inProgressCount()).isEqualTo(5);
         assertThat(result.doneCount()).isEqualTo(2);
     }
+    
+    @Test
+    void delete_shouldThrowException_whenTaskIsAlreadyDone() {
+        task.setStatus(TaskStatus.DONE);
+        when(taskRepository.existsById(taskId)).thenReturn(true);
+        
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+        
+        assertThatThrownBy(() -> taskService.delete(taskId))
+                .isInstanceOf(TaskAlreadyCompletedException.class);
+        
+        verify(taskRepository, never()).save(any());
+    }
 }
