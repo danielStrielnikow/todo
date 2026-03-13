@@ -61,7 +61,6 @@ class TaskServiceImplTest {
         requestDto = new TaskRequestDto();
         requestDto.setTitle("Test task");
         requestDto.setDescription("Test description");
-        requestDto.setStatus(TaskStatus.NEW);
 
         responseDto = new TaskResponseDto(
                 taskId,
@@ -89,7 +88,6 @@ class TaskServiceImplTest {
     
     @Test
     void create_shouldSetStatusNew_whenStatusNull() {
-        requestDto.setStatus(null);
         task.setStatus(null);
         
         when(taskMapper.toEntity(requestDto)).thenReturn(task);
@@ -140,7 +138,6 @@ class TaskServiceImplTest {
     @Test
     void update_shouldReturnUpdatedTask_whenExists() {
         task.setStatus(TaskStatus.NEW);
-        requestDto.setStatus(TaskStatus.IN_PROGRESS); 
 
         when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
         when(taskRepository.save(task)).thenReturn(task);
@@ -191,18 +188,6 @@ class TaskServiceImplTest {
 
         assertThatThrownBy(() -> taskService.update(taskId, requestDto))
                 .isInstanceOf(TaskAlreadyCompletedException.class);
-
-        verify(taskRepository, never()).save(any());
-    }
-
-    @Test
-    void update_shouldThrowException_whenStatusTransitionIsInvalid() {
-        task.setStatus(TaskStatus.IN_PROGRESS);
-        requestDto.setStatus(TaskStatus.NEW);
-        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
-
-        assertThatThrownBy(() -> taskService.update(taskId, requestDto))
-                .isInstanceOf(InvalidStatusTransitionException.class);
 
         verify(taskRepository, never()).save(any());
     }

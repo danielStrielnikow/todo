@@ -36,7 +36,6 @@ class TaskIntegrationTest {
         TaskRequestDto dto = new TaskRequestDto();
         dto.setTitle(title);
         dto.setDescription(description);
-        dto.setStatus(status);
         return dto;
     }
 

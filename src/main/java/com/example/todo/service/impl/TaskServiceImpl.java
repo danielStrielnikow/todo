@@ -19,13 +19,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
+
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TaskServiceImpl implements TaskService {
-    
+
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
 
@@ -45,9 +46,9 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public TaskResponseDto create(TaskRequestDto dto) {
         Task task = taskMapper.toEntity(dto);
-        if (task.getStatus() == null) {
-            task.setStatus(TaskStatus.NEW);
-        }
+        
+        task.setStatus(TaskStatus.NEW);
+
         TaskResponseDto response = taskMapper.toResponse(taskRepository.save(task));
         log.info("Task created: {}", response);
         return response;
@@ -74,11 +75,9 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponseDto update(UUID id, TaskRequestDto dto) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
-        
-        
+
+
         if (task.getStatus() == TaskStatus.DONE) throw new TaskAlreadyCompletedException(id);
-        
-        if (dto.getStatus() != null) validateStatusTransition(task.getStatus(), dto.getStatus());
 
         taskMapper.updateEntity(dto, task);
         Task saved = taskRepository.save(task);
@@ -92,7 +91,7 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 
         if (task.getStatus() == TaskStatus.DONE) throw new TaskAlreadyCompletedException(id);
-        
+
         validateStatusTransition(task.getStatus(), newStatus);
         task.setStatus(newStatus);
         Task savedStatus = taskRepository.save(task);
