@@ -225,4 +225,24 @@ public class TaskControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].title").value("Test task"));
     }
+
+    @Test
+    void PATCH_updateStatus_shouldReturn200() throws Exception {
+        when(taskService.updateStatus(eq(taskId), eq(TaskStatus.IN_PROGRESS)))
+                .thenReturn(responseDto);
+
+        mockMvc.perform(patch("/api/tasks/{id}/status", taskId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\": \"IN_PROGRESS\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NEW"));
+    }
+    
+    @Test
+    void PATCH_updateStatus_shouldReturn400_whenStatusisNull() throws Exception {
+        mockMvc.perform(patch("/api/tasks/{id}/status", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"status\": null}"))
+                .andExpect(status().isBadRequest());
+    }
 }
