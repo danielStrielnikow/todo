@@ -3,6 +3,7 @@ package com.example.todo.service.impl;
 import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.api.dto.responseDto.TaskStatsDto;
 import com.example.todo.exception.InvalidStatusTransitionException;
 import com.example.todo.exception.ResourceNotFoundException;
 import com.example.todo.exception.TaskAlreadyCompletedException;
@@ -237,7 +238,7 @@ class TaskServiceImplTest {
         when(taskRepository.countByStatus(TaskStatus.NEW)).thenReturn(3);
         when(taskRepository.countByStatus(TaskStatus.IN_PROGRESS)).thenReturn(5);
         when(taskRepository.countByStatus(TaskStatus.DONE)).thenReturn(2);
-        when(taskRepository.count()).thenReturn(10);
+        when(taskRepository.count()).thenReturn(Long.valueOf(10));
         
         TaskStatsDto result = taskService.getStats();
 

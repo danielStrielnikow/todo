@@ -4,6 +4,7 @@ import com.example.todo.api.controller.TaskController;
 import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.api.dto.responseDto.TaskStatsDto;
 import com.example.todo.exception.InvalidStatusTransitionException;
 import com.example.todo.exception.ResourceNotFoundException;
 import com.example.todo.exception.TaskAlreadyCompletedException;
@@ -272,7 +273,7 @@ public class TaskControllerTest {
     @Test
     void GET_stats_shouldReturn200_withStatistics() throws Exception {
         TaskStatsDto stats = new TaskStatsDto(10, 3, 5, 2);
-        when(taskService.getStats).thenReturn(stats);
+        when(taskService.getStats()).thenReturn(stats);
         
         mockMvc.perform(get("/api/tasks/stats"))
                 .andExpect(status().isOk())

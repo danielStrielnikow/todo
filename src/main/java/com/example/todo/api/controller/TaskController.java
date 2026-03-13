@@ -4,6 +4,7 @@ import com.example.todo.api.dto.requestDto.StatusUpdateRequest;
 import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.api.dto.responseDto.TaskStatsDto;
 import com.example.todo.model.enums.TaskStatus;
 import com.example.todo.service.TaskService;
 import jakarta.validation.Valid;
@@ -24,6 +25,12 @@ import java.util.UUID;
 public class TaskController {
     
     private final TaskService taskService;
+
+
+    @GetMapping("/stats")
+    public ResponseEntity<TaskStatsDto> getStats() {
+        return ResponseEntity.ok(taskService.getStats());
+    }
 
     @PostMapping
     public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskRequestDto dto) {

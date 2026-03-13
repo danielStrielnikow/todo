@@ -3,6 +3,7 @@ package com.example.todo.service.impl;
 import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.api.dto.responseDto.TaskStatsDto;
 import com.example.todo.exception.InvalidStatusTransitionException;
 import com.example.todo.exception.ResourceNotFoundException;
 import com.example.todo.exception.TaskAlreadyCompletedException;
@@ -27,8 +28,19 @@ public class TaskServiceImpl implements TaskService {
     
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
-    
-    
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaskStatsDto getStats() {
+        int total = (int) taskRepository.count();
+        int newCount = taskRepository.countByStatus(TaskStatus.NEW);
+        int inProgress = taskRepository.countByStatus(TaskStatus.IN_PROGRESS);
+        int done = taskRepository.countByStatus(TaskStatus.DONE);
+        log.info("Stats: total={}, new={}, inProgress={}, done={}", total, newCount, inProgress, done);
+        return new TaskStatsDto(total, newCount, inProgress, done);
+    }
+
     @Override
     @Transactional
     public TaskResponseDto create(TaskRequestDto dto) {
