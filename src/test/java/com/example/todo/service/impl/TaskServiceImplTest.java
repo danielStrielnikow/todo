@@ -163,7 +163,7 @@ class TaskServiceImplTest {
 
     @Test
     void delete_shouldDeleteTask_whenExists() {
-        when(taskRepository.existsById(taskId)).thenReturn(true);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
 
         taskService.delete(taskId);
 
@@ -172,7 +172,7 @@ class TaskServiceImplTest {
 
     @Test
     void delete_shouldThrowException_whenNotFound() {
-        when(taskRepository.existsById(taskId)).thenReturn(false);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.delete(taskId))
                 .isInstanceOf(ResourceNotFoundException.class)
