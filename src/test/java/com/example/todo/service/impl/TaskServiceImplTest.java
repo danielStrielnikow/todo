@@ -1,7 +1,9 @@
 package com.example.todo.service.impl;
 
+import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.api.dto.responseDto.TaskStatsDto;
 import com.example.todo.exception.InvalidStatusTransitionException;
 import com.example.todo.exception.ResourceNotFoundException;
 import com.example.todo.exception.TaskAlreadyCompletedException;
@@ -15,6 +17,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -95,14 +102,19 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void findAll_shouldReturnListOfTasks() {
-        when(taskRepository.findAll()).thenReturn(List.of(task));
+    void findAll_shouldReturnPagedTasks() {
+        TaskFilterRequest filter = new TaskFilterRequest();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Task> taskPage = new PageImpl<>(List.of(task));
+
+        when(taskRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(taskPage);
         when(taskMapper.toResponse(task)).thenReturn(responseDto);
 
-        List<TaskResponseDto> result = taskService.findAll();
+        Page<TaskResponseDto> result = taskService.findAll(filter, pageable);
 
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.get(0).title()).isEqualTo("Test task");
+        assertThat(result.getContent().size()).isEqualTo(1);
+        assertThat(result.getContent().get(0).title()).isEqualTo("Test task");
     }
 
     @Test
@@ -193,5 +205,46 @@ class TaskServiceImplTest {
                 .isInstanceOf(InvalidStatusTransitionException.class);
 
         verify(taskRepository, never()).save(any());
+    }
+    
+    @Test
+    void updateStatus_shouldReturnUpdatedTask_whenTransitionValid() {
+        task.setStatus(TaskStatus.NEW);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+        when(taskRepository.save(task)).thenReturn(task);
+        when(taskMapper.toResponse(task)).thenReturn(responseDto);
+        
+        TaskResponseDto result = taskService.updateStatus(taskId, TaskStatus.IN_PROGRESS);
+        
+        assertThat(result).isNotNull();
+        verify(taskRepository).save(task);
+    }
+    
+    @Test
+    void updateStatus_shouldThrowException_whenTaskAlreadyDone() {
+        task.setStatus(TaskStatus.DONE);
+        
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+        
+        assertThatThrownBy(() -> taskService.updateStatus(taskId, TaskStatus.NEW))
+                .isInstanceOf(TaskAlreadyCompletedException.class);
+        
+        verify(taskRepository, never()).save(any());
+    }
+    
+    
+    @Test
+    void getStats_shouldReturnCorrectCount() {
+        when(taskRepository.countByStatus(TaskStatus.NEW)).thenReturn(3);
+        when(taskRepository.countByStatus(TaskStatus.IN_PROGRESS)).thenReturn(5);
+        when(taskRepository.countByStatus(TaskStatus.DONE)).thenReturn(2);
+        when(taskRepository.count()).thenReturn(Long.valueOf(10));
+        
+        TaskStatsDto result = taskService.getStats();
+
+        assertThat(result.total()).isEqualTo(10);
+        assertThat(result.newCount()).isEqualTo(3);
+        assertThat(result.inProgressCount()).isEqualTo(5);
+        assertThat(result.doneCount()).isEqualTo(2);
     }
 }

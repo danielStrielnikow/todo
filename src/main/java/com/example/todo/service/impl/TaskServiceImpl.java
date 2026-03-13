@@ -1,7 +1,9 @@
 package com.example.todo.service.impl;
 
+import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
+import com.example.todo.api.dto.responseDto.TaskStatsDto;
 import com.example.todo.exception.InvalidStatusTransitionException;
 import com.example.todo.exception.ResourceNotFoundException;
 import com.example.todo.exception.TaskAlreadyCompletedException;
@@ -9,13 +11,14 @@ import com.example.todo.mapper.TaskMapper;
 import com.example.todo.model.Task;
 import com.example.todo.model.enums.TaskStatus;
 import com.example.todo.repository.TaskRepository;
+import com.example.todo.repository.TaskSpecification;
 import com.example.todo.service.TaskService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Service
@@ -25,8 +28,19 @@ public class TaskServiceImpl implements TaskService {
     
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
-    
-    
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaskStatsDto getStats() {
+        int total = (int) taskRepository.count();
+        int newCount = taskRepository.countByStatus(TaskStatus.NEW);
+        int inProgress = taskRepository.countByStatus(TaskStatus.IN_PROGRESS);
+        int done = taskRepository.countByStatus(TaskStatus.DONE);
+        log.info("Stats: total={}, new={}, inProgress={}, done={}", total, newCount, inProgress, done);
+        return new TaskStatsDto(total, newCount, inProgress, done);
+    }
+
     @Override
     @Transactional
     public TaskResponseDto create(TaskRequestDto dto) {
@@ -41,11 +55,10 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TaskResponseDto> findAll() {
-        return taskRepository.findAll()
-                .stream()
-                .map(taskMapper::toResponse)
-                .toList();
+    public Page<TaskResponseDto> findAll(TaskFilterRequest filter, Pageable pageable) {
+        return taskRepository
+                .findAll(TaskSpecification.withFilters(filter), pageable)
+                .map(taskMapper::toResponse);
     }
 
     @Override
@@ -71,6 +84,20 @@ public class TaskServiceImpl implements TaskService {
         Task saved = taskRepository.save(task);
         log.info("Task updated: {}", id);
         return taskMapper.toResponse(saved);
+    }
+
+    @Override
+    public TaskResponseDto updateStatus(UUID id, TaskStatus newStatus) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+
+        if (task.getStatus() == TaskStatus.DONE) throw new TaskAlreadyCompletedException(id);
+        
+        validateStatusTransition(task.getStatus(), newStatus);
+        task.setStatus(newStatus);
+        Task savedStatus = taskRepository.save(task);
+        log.info("Task updated status: {}", id);
+        return taskMapper.toResponse(savedStatus);
     }
 
     private void validateStatusTransition(TaskStatus from, TaskStatus to) {
