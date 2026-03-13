@@ -114,9 +114,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public void delete(UUID id) {
-        if (!taskRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Task not found with id: " + id);
-        }
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+
+        if (task.getStatus() == TaskStatus.DONE) throw new TaskAlreadyCompletedException(id);
+
         taskRepository.deleteById(id);
         log.info("Task deleted: {}", id);
     }

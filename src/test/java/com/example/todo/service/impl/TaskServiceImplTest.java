@@ -236,7 +236,7 @@ class TaskServiceImplTest {
     @Test
     void delete_shouldThrowException_whenTaskIsAlreadyDone() {
         task.setStatus(TaskStatus.DONE);
-        when(taskRepository.existsById(taskId)).thenReturn(true);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
         
         when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
         

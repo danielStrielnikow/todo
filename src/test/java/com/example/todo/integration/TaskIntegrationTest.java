@@ -32,7 +32,7 @@ class TaskIntegrationTest {
     private TaskRepository taskRepository;
 
 
-    private TaskRequestDto buildRequest(String title, String description, TaskStatus status) {
+    private TaskRequestDto buildRequest(String title, String description) {
         TaskRequestDto dto = new TaskRequestDto();
         dto.setTitle(title);
         dto.setDescription(description);
@@ -47,7 +47,7 @@ class TaskIntegrationTest {
     
     @Test
     void shouldCreateAndRetrieveTask() throws Exception {
-        TaskRequestDto request = buildRequest("Buy apple", "From the shop", TaskStatus.NEW);
+        TaskRequestDto request = buildRequest("Buy apple", "From the shop");
 
         MvcResult created = mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -71,7 +71,7 @@ class TaskIntegrationTest {
     
     @Test
     void shouldUpdateTaskStatus_throughValidTransition() throws Exception {
-        TaskRequestDto request = buildRequest("Write tests", null, TaskStatus.NEW);
+        TaskRequestDto request = buildRequest("Write tests", null);
 
         MvcResult created = mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -102,7 +102,7 @@ class TaskIntegrationTest {
 
     @Test
     void shouldReturn400_whenTitleIsBlank() throws Exception {
-        TaskRequestDto request = buildRequest("", null, TaskStatus.NEW);
+        TaskRequestDto request = buildRequest("", null);
 
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -112,7 +112,7 @@ class TaskIntegrationTest {
 
     @Test
     void shouldDeleteTask() throws Exception {
-        TaskRequestDto request = buildRequest("Delete me", null, TaskStatus.NEW);
+        TaskRequestDto request = buildRequest("Delete me", null);
 
         MvcResult created = mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -135,12 +135,41 @@ class TaskIntegrationTest {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                buildRequest("Task 1", null, TaskStatus.NEW))))
+                                buildRequest("Task 1", null))))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/tasks/stats"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.newCount").value(1));
+    }
+    
+    @Test
+    void shouldReturn409_whenDeletingCompletedTask() throws Exception {
+        MvcResult created = mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                buildRequest("Done task", null))))
+                .andExpect(status().isCreated())
+                .andReturn();
+        
+        String id = objectMapper.readTree(created.getResponse().getContentAsString())
+                .get("id").asText();
+        
+        StatusUpdateRequest toInProgress = new StatusUpdateRequest();
+        toInProgress.setStatus(TaskStatus.IN_PROGRESS);
+        mockMvc.perform(patch("/api/tasks/{id}/status", id)
+                .contentType(MediaType.APPLICATION_JSON)
+
+                .content(objectMapper.writeValueAsString(toInProgress)));
+
+        StatusUpdateRequest toDone = new StatusUpdateRequest();
+        toDone.setStatus(TaskStatus.DONE);
+        mockMvc.perform(patch("/api/tasks/{id}/status", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(toDone)));
+
+        mockMvc.perform(delete("/api/tasks/{id}", id))
+                .andExpect(status().isConflict());
     }
 }
