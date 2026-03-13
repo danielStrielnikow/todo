@@ -230,4 +230,20 @@ class TaskServiceImplTest {
         
         verify(taskRepository, never()).save(any());
     }
+    
+    
+    @Test
+    void getStats_shouldReturnCorrectCount() {
+        when(taskRepository.countByStatus(TaskStatus.NEW)).thenReturn(3);
+        when(taskRepository.countByStatus(TaskStatus.IN_PROGRESS)).thenReturn(5);
+        when(taskRepository.countByStatus(TaskStatus.DONE)).thenReturn(2);
+        when(taskRepository.count()).thenReturn(10);
+        
+        TaskStatsDto result = taskService.getStats();
+
+        assertThat(result.total()).isEqualTo(10);
+        assertThat(result.newCount()).isEqualTo(3);
+        assertThat(result.inProgressCount()).isEqualTo(5);
+        assertThat(result.doneCount()).isEqualTo(2);
+    }
 }
