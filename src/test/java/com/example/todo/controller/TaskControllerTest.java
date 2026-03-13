@@ -57,7 +57,6 @@ public class TaskControllerTest {
         requestDto = new TaskRequestDto();
         requestDto.setTitle("Test task");
         requestDto.setDescription("Test description");
-        requestDto.setStatus(TaskStatus.NEW);
 
         responseDto = new TaskResponseDto(
                 taskId,

@@ -1,6 +1,5 @@
 package com.example.todo.api.dto.requestDto;
 
-import com.example.todo.model.enums.TaskStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,7 +19,4 @@ public class TaskRequestDto {
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     @Schema(description = "Optional task description", example = "From the shop on city")
     private String description;
-
-    @Schema(description = "Task status", example = "NEW", allowableValues = {"NEW", "IN_PROGRESS", "DONE"})
-    private TaskStatus status;
 }
