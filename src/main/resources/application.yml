@@ -7,7 +7,16 @@ spring:
 
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
-
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health, info
+      endpoint:
+        health:
+          show-details: always
+          
   jpa:
     hibernate:
       ddl-auto: update
