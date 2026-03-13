@@ -163,7 +163,7 @@ class TaskServiceImplTest {
 
     @Test
     void delete_shouldDeleteTask_whenExists() {
-        when(taskRepository.existsById(taskId)).thenReturn(true);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
 
         taskService.delete(taskId);
 
@@ -172,7 +172,7 @@ class TaskServiceImplTest {
 
     @Test
     void delete_shouldThrowException_whenNotFound() {
-        when(taskRepository.existsById(taskId)).thenReturn(false);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> taskService.delete(taskId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -231,5 +231,18 @@ class TaskServiceImplTest {
         assertThat(result.newCount()).isEqualTo(3);
         assertThat(result.inProgressCount()).isEqualTo(5);
         assertThat(result.doneCount()).isEqualTo(2);
+    }
+    
+    @Test
+    void delete_shouldThrowException_whenTaskIsAlreadyDone() {
+        task.setStatus(TaskStatus.DONE);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+        
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+        
+        assertThatThrownBy(() -> taskService.delete(taskId))
+                .isInstanceOf(TaskAlreadyCompletedException.class);
+        
+        verify(taskRepository, never()).save(any());
     }
 }
