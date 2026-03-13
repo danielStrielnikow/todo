@@ -1,5 +1,6 @@
 package com.example.todo.service.impl;
 
+import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
 import com.example.todo.exception.InvalidStatusTransitionException;
@@ -15,6 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -95,14 +101,19 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void findAll_shouldReturnListOfTasks() {
-        when(taskRepository.findAll()).thenReturn(List.of(task));
+    void findAll_shouldReturnPagedTasks() {
+        TaskFilterRequest filter = new TaskFilterRequest();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Task> taskPage = new PageImpl<>(List.of(task));
+
+        when(taskRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(taskPage);
         when(taskMapper.toResponse(task)).thenReturn(responseDto);
 
-        List<TaskResponseDto> result = taskService.findAll();
+        Page<TaskResponseDto> result = taskService.findAll(filter, pageable);
 
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.get(0).title()).isEqualTo("Test task");
+        assertThat(result.getContent().size()).isEqualTo(1);
+        assertThat(result.getContent().get(0).title()).isEqualTo("Test task");
     }
 
     @Test

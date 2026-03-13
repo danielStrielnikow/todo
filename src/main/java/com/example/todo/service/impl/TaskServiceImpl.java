@@ -1,5 +1,6 @@
 package com.example.todo.service.impl;
 
+import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
 import com.example.todo.exception.InvalidStatusTransitionException;
@@ -9,13 +10,14 @@ import com.example.todo.mapper.TaskMapper;
 import com.example.todo.model.Task;
 import com.example.todo.model.enums.TaskStatus;
 import com.example.todo.repository.TaskRepository;
+import com.example.todo.repository.TaskSpecification;
 import com.example.todo.service.TaskService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Service
@@ -41,11 +43,10 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TaskResponseDto> findAll() {
-        return taskRepository.findAll()
-                .stream()
-                .map(taskMapper::toResponse)
-                .toList();
+    public Page<TaskResponseDto> findAll(TaskFilterRequest filter, Pageable pageable) {
+        return taskRepository
+                .findAll(TaskSpecification.withFilters(filter), pageable)
+                .map(taskMapper::toResponse);
     }
 
     @Override

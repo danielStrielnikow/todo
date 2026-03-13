@@ -1,6 +1,7 @@
 package com.example.todo.controller;
 
 import com.example.todo.api.controller.TaskController;
+import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
 import com.example.todo.exception.InvalidStatusTransitionException;
@@ -14,12 +15,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -77,14 +80,17 @@ public class TaskControllerTest {
                 .andExpect(jsonPath("$.title").value("Test task"))
                 .andExpect(jsonPath("$.status").value("NEW"));
     }
-    
+
     @Test
+    
     void GET_getAllTasks_shouldReturnAllTasks() throws Exception {
-        when(taskService.findAll()).thenReturn(Arrays.asList(responseDto));
+        Page<TaskResponseDto> page = new PageImpl<>(List.of(responseDto));
+        when(taskService.findAll(any(TaskFilterRequest.class), any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(get("/api/tasks"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content").isArray());
     }
     
     @Test
@@ -127,7 +133,7 @@ public class TaskControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.timestamp").exists());
+                .andExpect(jsonPath("$.time").exists());
     }
     
     @Test
@@ -178,5 +184,45 @@ public class TaskControllerTest {
                         .content(invalidJSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void GET_getAllTasks_shouldReturnPagedResult() throws Exception {
+        Page<TaskResponseDto> page = new PageImpl<>(List.of(responseDto));
+        when(taskService.findAll(any(TaskFilterRequest.class), any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "createdAt,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void GET_getAllTasks_shouldFilterByStatus() throws Exception {
+        Page<TaskResponseDto> page = new PageImpl<>(List.of(responseDto));
+        when(taskService.findAll(any(TaskFilterRequest.class), any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("status", "NEW"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].status").value("NEW"));
+    }
+
+    @Test
+    void GET_getAllTasks_shouldFilterByTitleKeyword() throws Exception {
+        Page<TaskResponseDto> page = new PageImpl<>(List.of(responseDto));
+        when(taskService.findAll(any(TaskFilterRequest.class), any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("keyword", "Test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("Test task"));
     }
 }

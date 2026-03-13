@@ -1,15 +1,19 @@
 package com.example.todo.api.controller;
 
+import com.example.todo.api.dto.requestDto.TaskFilterRequest;
 import com.example.todo.api.dto.requestDto.TaskRequestDto;
 import com.example.todo.api.dto.responseDto.TaskResponseDto;
 import com.example.todo.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @RestController
@@ -25,8 +29,11 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskResponseDto>> findAll() {
-        return ResponseEntity.ok(taskService.findAll());
+    public ResponseEntity<Page<TaskResponseDto>> findAll(
+            @ModelAttribute TaskFilterRequest filter,
+            @PageableDefault(size = 10, sort = "createdAt",
+                    direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(taskService.findAll(filter, pageable));
     }
 
     @GetMapping("/{id}")
