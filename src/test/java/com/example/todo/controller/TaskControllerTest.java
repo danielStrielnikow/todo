@@ -245,4 +245,28 @@ public class TaskControllerTest {
                 .content("{\"status\": null}"))
                 .andExpect(status().isBadRequest());
     }
+    
+    @Test
+    void PATCH_updateStatus_shouldReturn409_whenTaskAlreadyDone() throws Exception {
+        when(taskService.update(eq(taskId), any()))
+                .thenThrow(new TaskAlreadyCompletedException(taskId));
+        
+        mockMvc.perform(patch("/api/tasks/{id}/status", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"status\": \"IN_PROGRESS\"}"))
+                .andExpect(status().isConflict());
+    }
+    
+    @Test
+    void PATCH_updateStatus_shouldReturn422_whenTransitionInvalid() throws Exception {
+        when(taskService.updateStatus(eq(taskId), any()))
+                .thenThrow(new InvalidStatusTransitionException(TaskStatus.DONE, TaskStatus.NEW));
+        
+        mockMvc.perform(patch("/api/tasks/{id}/status", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"status\": \"NEW\"}"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+    
+    
 }
