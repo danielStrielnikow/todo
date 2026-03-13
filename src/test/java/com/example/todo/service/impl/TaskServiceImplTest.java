@@ -205,4 +205,29 @@ class TaskServiceImplTest {
 
         verify(taskRepository, never()).save(any());
     }
+    
+    @Test
+    void updateStatus_shouldReturnUpdatedTask_whenTransitionValid() {
+        task.setStatus(TaskStatus.NEW);
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+        when(taskRepository.save(task)).thenReturn(task);
+        when(taskMapper.toResponse(task)).thenReturn(responseDto);
+        
+        TaskResponseDto result = taskService.updateStatus(taskId, TaskStatus.IN_PROGRESS);
+        
+        assertThat(result).isNotNull();
+        verify(taskRepository).save(task);
+    }
+    
+    @Test
+    void updateStatus_shouldThrowException_whenTaskAlreadyDone() {
+        task.setStatus(TaskStatus.DONE);
+        
+        when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+        
+        assertThatThrownBy(() -> taskService.updateStatus(taskId, TaskStatus.NEW))
+                .isInstanceOf(TaskAlreadyCompletedException.class);
+        
+        verify(taskRepository, never()).save(any());
+    }
 }

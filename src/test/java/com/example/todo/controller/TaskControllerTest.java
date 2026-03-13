@@ -248,7 +248,7 @@ public class TaskControllerTest {
     
     @Test
     void PATCH_updateStatus_shouldReturn409_whenTaskAlreadyDone() throws Exception {
-        when(taskService.update(eq(taskId), any()))
+        when(taskService.updateStatus(eq(taskId), any(TaskStatus.class)))
                 .thenThrow(new TaskAlreadyCompletedException(taskId));
         
         mockMvc.perform(patch("/api/tasks/{id}/status", taskId)
